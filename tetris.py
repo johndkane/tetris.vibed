@@ -79,8 +79,8 @@ def run_game(win):
     while True:
         grid = create_grid(locked)
         fall_time += clock.tick() / 1000
-
         piece_locked = False
+
         if fall_time > speed:
             fall_time = 0
             current.y += 1
@@ -92,11 +92,19 @@ def run_game(win):
             if ev.type == pygame.QUIT:
                 pygame.quit(); sys.exit()
             if ev.type == pygame.KEYDOWN:
+                if ev.key == pygame.K_SPACE:
+                    while True:
+                        current.y += 1
+                        if not valid(current, grid):
+                            current.y -= 1
+                            piece_locked = True
+                            break
+                    continue
                 orig = (current.x, current.y, current.rot)
                 if ev.key == pygame.K_LEFT:  current.x -= 1
-                if ev.key == pygame.K_RIGHT: current.x += 1
-                if ev.key == pygame.K_UP:    current.rot += 1
-                if ev.key == pygame.K_DOWN:
+                elif ev.key == pygame.K_RIGHT: current.x += 1
+                elif ev.key == pygame.K_UP:    current.rot += 1
+                elif ev.key == pygame.K_DOWN:
                     current.y += 1
                     if not valid(current, grid):
                         current.y -= 1
@@ -112,7 +120,7 @@ def run_game(win):
             clear_rows(grid, locked)
             current, next_p = next_p, Piece(cols//2, 0, random.choice(shapes))
             if not valid(current, grid):
-                return  # game over
+                return
 
         for r,c in convert(current):
             if 0 <= r < rows and 0 <= c < cols:
