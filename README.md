@@ -15,7 +15,7 @@ Install the requirements:
 > pip install pygame
 ```
 
-Download and Tetris script from this repo and run it:
+Download the tetris.py script file from this repo and run it:
 
 ```bash
 > python tetris.py
