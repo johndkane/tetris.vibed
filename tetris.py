@@ -85,31 +85,32 @@ def convert(p):
 
 def valid(p, grid):
     for r, c in convert(p):
-        if c < 0 or c >= cols or r >= rows:      # side‐ or bottom‐bounds
+        if c < 0 or c >= cols or r >= rows:
             return False
-        if r >= 0 and grid[r][c] != (0,0,0):      # only collide inside the grid
+        if r >= 0 and grid[r][c] != (0,0,0):
             return False
     return True
 
 def clear_rows(grid, locked):
-    cleared = 0
-    for i in range(rows-1, -1, -1):
-        if (0,0,0) not in grid[i]:
-            cleared += 1
-            for j in range(cols):
-                locked.pop((i,j), None)
-    if cleared:
-        for (r,c) in sorted(list(locked), key=lambda x: x[0])[::-1]:
-            if r < i:
-                locked[(r+cleared, c)] = locked.pop((r,c))
-    return cleared
+    rows_to_clear = [i for i in range(rows) if (0,0,0) not in grid[i]]
+    for r in rows_to_clear:
+        for c in range(cols):
+            locked.pop((r,c), None)
+    if rows_to_clear:
+        rows_to_clear.sort()
+        new_locked = {}
+        for (r,c), color in locked.items():
+            shift = sum(1 for cleared in rows_to_clear if r < cleared)
+            new_locked[(r+shift, c)] = color
+        locked.clear()
+        locked.update(new_locked)
+    return len(rows_to_clear)
 
 def draw(win, grid):
     win.fill((0,0,0))
     for r in range(rows):
         for c in range(cols):
-            pygame.draw.rect(win, grid[r][c],
-                             (c*block, r*block, block, block), 0)
+            pygame.draw.rect(win, grid[r][c], (c*block, r*block, block, block), 0)
     for i in range(rows+1):
         pygame.draw.line(win, (50,50,50), (0, i*block), (width, i*block))
     for j in range(cols+1):
@@ -138,8 +139,8 @@ def main():
                 for r, c in convert(current):
                     if 0 <= r < rows and 0 <= c < cols:
                         locked[(r,c)] = current.color
-                current, next_p = next_p, Piece(cols//2, 0, random.choice(shapes))
                 clear_rows(grid, locked)
+                current, next_p = next_p, Piece(cols//2, 0, random.choice(shapes))
 
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
