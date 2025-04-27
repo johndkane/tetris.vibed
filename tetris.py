@@ -110,7 +110,7 @@ def draw(win, grid):
     win.fill((0,0,0))
     for r in range(rows):
         for c in range(cols):
-            pygame.draw.rect(win, grid[r][c], (c*block, r*block, block, block), 0)
+            pygame.draw.rect(win, grid[r][c], (c*block, r*block, block, block))
     for i in range(rows+1):
         pygame.draw.line(win, (50,50,50), (0, i*block), (width, i*block))
     for j in range(cols+1):
@@ -131,29 +131,51 @@ def main():
         grid = create_grid(locked)
         dt = clock.tick()
         fall_time += dt / 1000
+        piece_locked = False
+
+        # automatic drop
         if fall_time > speed:
             fall_time = 0
             current.y += 1
             if not valid(current, grid):
                 current.y -= 1
-                for r, c in convert(current):
-                    if 0 <= r < rows and 0 <= c < cols:
-                        locked[(r,c)] = current.color
-                clear_rows(grid, locked)
-                current, next_p = next_p, Piece(cols//2, 0, random.choice(shapes))
+                piece_locked = True
 
+        # input
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
                 run = False
             if ev.type == pygame.KEYDOWN:
                 orig = (current.x, current.y, current.rot)
-                if ev.key == pygame.K_LEFT:  current.x -= 1
-                if ev.key == pygame.K_RIGHT: current.x += 1
-                if ev.key == pygame.K_DOWN:  current.y += 1
-                if ev.key == pygame.K_UP:    current.rot += 1
-                if not valid(current, grid):
-                    current.x, current.y, current.rot = orig
+                if ev.key == pygame.K_LEFT:
+                    current.x -= 1
+                    if not valid(current, grid):
+                        current.x, current.y, current.rot = orig
+                elif ev.key == pygame.K_RIGHT:
+                    current.x += 1
+                    if not valid(current, grid):
+                        current.x, current.y, current.rot = orig
+                elif ev.key == pygame.K_UP:
+                    current.rot += 1
+                    if not valid(current, grid):
+                        current.x, current.y, current.rot = orig
+                elif ev.key == pygame.K_DOWN:
+                    current.y += 1
+                    if not valid(current, grid):
+                        current.y -= 1
+                        piece_locked = True
 
+        # lock, clear, spawn
+        if piece_locked:
+            for r, c in convert(current):
+                if 0 <= r < rows and 0 <= c < cols:
+                    locked[(r,c)] = current.color
+            clear_rows(grid, locked)
+            current, next_p = next_p, Piece(cols//2, 0, random.choice(shapes))
+            grid = create_grid(locked)
+            piece_locked = False
+
+        # draw current piece
         for r, c in convert(current):
             if 0 <= r < rows and 0 <= c < cols:
                 grid[r][c] = current.color
