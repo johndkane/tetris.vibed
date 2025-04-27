@@ -126,15 +126,13 @@ def main():
     current = Piece(cols//2, 0, random.choice(shapes))
     next_p = Piece(cols//2, 0, random.choice(shapes))
     fall_time, speed = 0, 0.5
-    run = True
 
-    while run:
+    while True:
         grid = create_grid(locked)
         dt = clock.tick()
         fall_time += dt / 1000
         piece_locked = False
 
-        # automatic drop
         if fall_time > speed:
             fall_time = 0
             current.y += 1
@@ -142,40 +140,37 @@ def main():
                 current.y -= 1
                 piece_locked = True
 
-        # input
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
-                run = False
+                pygame.quit()
+                return
             if ev.type == pygame.KEYDOWN:
                 orig = (current.x, current.y, current.rot)
                 if ev.key == pygame.K_LEFT:
                     current.x -= 1
-                    if not valid(current, grid):
-                        current.x, current.y, current.rot = orig
+                    if not valid(current, grid): current.x, current.y, current.rot = orig
                 elif ev.key == pygame.K_RIGHT:
                     current.x += 1
-                    if not valid(current, grid):
-                        current.x, current.y, current.rot = orig
+                    if not valid(current, grid): current.x, current.y, current.rot = orig
                 elif ev.key == pygame.K_UP:
                     current.rot += 1
-                    if not valid(current, grid):
-                        current.x, current.y, current.rot = orig
+                    if not valid(current, grid): current.x, current.y, current.rot = orig
                 elif ev.key == pygame.K_DOWN:
                     current.y += 1
                     if not valid(current, grid):
                         current.y -= 1
                         piece_locked = True
 
-        # lock, clear, spawn
         if piece_locked:
             for r, c in convert(current):
                 if 0 <= r < rows and 0 <= c < cols:
                     locked[(r,c)] = current.color
-            grid = create_grid(locked)           # rebuild with new locks
-            clear_rows(grid, locked)             # detect & clear now
+            grid = create_grid(locked)
+            clear_rows(grid, locked)
             current, next_p = next_p, Piece(cols//2, 0, random.choice(shapes))
+            if not valid(current, grid):
+                break
 
-        # draw current piece
         for r, c in convert(current):
             if 0 <= r < rows and 0 <= c < cols:
                 grid[r][c] = current.color
@@ -183,6 +178,7 @@ def main():
         draw(win, grid)
 
     pygame.quit()
+    print("Game Over")
 
 if __name__ == '__main__':
     main()
