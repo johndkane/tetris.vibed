@@ -93,17 +93,18 @@ def valid(p, grid):
 
 def clear_rows(grid, locked):
     rows_to_clear = [i for i in range(rows) if (0,0,0) not in grid[i]]
+    if not rows_to_clear:
+        return 0
     for r in rows_to_clear:
         for c in range(cols):
             locked.pop((r,c), None)
-    if rows_to_clear:
-        rows_to_clear.sort()
-        new_locked = {}
-        for (r,c), color in locked.items():
-            shift = sum(1 for cleared in rows_to_clear if r < cleared)
-            new_locked[(r+shift, c)] = color
-        locked.clear()
-        locked.update(new_locked)
+    rows_to_clear.sort()
+    new_locked = {}
+    for (r,c), color in locked.items():
+        shift = sum(1 for cleared in rows_to_clear if r < cleared)
+        new_locked[(r+shift, c)] = color
+    locked.clear()
+    locked.update(new_locked)
     return len(rows_to_clear)
 
 def draw(win, grid):
@@ -170,10 +171,9 @@ def main():
             for r, c in convert(current):
                 if 0 <= r < rows and 0 <= c < cols:
                     locked[(r,c)] = current.color
-            clear_rows(grid, locked)
+            grid = create_grid(locked)           # rebuild with new locks
+            clear_rows(grid, locked)             # detect & clear now
             current, next_p = next_p, Piece(cols//2, 0, random.choice(shapes))
-            grid = create_grid(locked)
-            piece_locked = False
 
         # draw current piece
         for r, c in convert(current):
